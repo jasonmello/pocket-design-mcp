@@ -26,6 +26,7 @@ await check("search_icons", { query: "home", sets: ["feather"] }, (b) => { const
 await check("get_icon", { name: "ph:house", size: 24, color: "#111827" }, (b) => b.startsWith("<svg") && b.includes("#111827"));
 await check("search_fonts", { query: "inter", source: "google", limit: 3 }, (b) => JSON.parse(b)[0].family === "Inter");
 await check("search_fonts", { query: "satoshi", source: "fontshare" }, (b) => { const f = JSON.parse(b)[0]; return f.family === "Satoshi" && !f.weights.includes(0) && f.variable; });
+await check("search_fonts", { category: "serif", source: "google", limit: 3 }, (b) => JSON.parse(b).every((f) => f.category === "Serif"));
 await check("search_fonts", { category: "mono", limit: 3 }, (b) => JSON.parse(b).length > 0);
 await check("search_components", { query: "dialog", registries: ["shadcn"] }, (b) => JSON.parse(b).components.some((c) => c.name === "dialog"));
 await check("search_components", { query: "text" }, (b) => { const r = new Set(JSON.parse(b).components.map((c) => c.registry)); return r.size >= 2; });
@@ -33,8 +34,9 @@ await check("get_component", { name: "button" }, (b) => JSON.parse(b).files[0].c
 await check("get_component", { name: "BlurText-TS-TW", registry: "reactbits" }, (b) => JSON.parse(b).install.includes("reactbits.dev/r/BlurText-TS-TW.json"));
 await check("get_component", { name: "text-effect", registry: "motion-primitives" }, (b) => JSON.parse(b).files.length > 0);
 await check("get_easing", { name: "easeOutCubic" }, (b) => JSON.parse(b).css === "cubic-bezier(0.33, 1, 0.68, 1)");
+await check("get_easing", { name: "easeInOutQuart" }, (b) => JSON.parse(b).gsapHint === "power3.inOut");
 await check("get_easing", { name: "easeOutBounce" }, (b) => JSON.parse(b).css.startsWith("linear(0,"));
-await check("get_easing", { spring: { stiffness: 100, damping: 10 } }, (b) => JSON.parse(b).durationMs > 0);
+await check("get_easing", { spring: { stiffness: 100, damping: 40 } }, (b) => JSON.parse(b).css.endsWith(", 1)"));
 await check("easing_gradient", { from: "#000" }, (b) => JSON.parse(b).css.startsWith("linear-gradient(to bottom"));
 await check("check_contrast", { text: "#000000", background: "#ffffff" }, (b) => { const r = JSON.parse(b); return r.wcag.ratio === 21 && r.apca.lc === 106; });
 await check("check_contrast", { text: "#9ca3af", background: "#ffffff" }, (b) => { const r = JSON.parse(b); return !r.wcag.passes && /^#[0-9a-f]{6}$/.test(r.suggestion); });

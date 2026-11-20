@@ -64,7 +64,8 @@ export const EASING_NAMES = [...Object.keys(BEZIER), ...Object.keys(SAMPLED)];
 const round = (n: number, d = 4) => +n.toFixed(d);
 
 function toLinear(fn: Fn, points: number): string {
-  const stops = Array.from({ length: points + 1 }, (_, i) => round(fn(i / points)));
+  // First and last stops are pinned to 0 and 1 so the animation never jumps at the ends.
+  const stops = Array.from({ length: points + 1 }, (_, i) => (i === 0 ? 0 : i === points ? 1 : round(fn(i / points))));
   return `linear(${stops.join(", ")})`;
 }
 
@@ -108,7 +109,7 @@ export function getEasing(name: string) {
 
 // easeOutCubic → "power2.out" (GSAP names)
 function gsapName(name: string): string {
-  const m = /^ease(In|Out|InOut)(\w+)$/.exec(name);
+  const m = /^ease(InOut|In|Out)(\w+)$/.exec(name);
   if (!m) return name;
   const dir = { In: "in", Out: "out", InOut: "inOut" }[m[1]]!;
   const map: Record<string, string> = {

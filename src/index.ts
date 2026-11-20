@@ -107,7 +107,7 @@ server.registerTool(
       "Without a query, returns the most popular in the category.",
     inputSchema: {
       query: z.string().optional().describe("Name or part of it, e.g. inter, satoshi"),
-      category: z.string().optional().describe("E.g. sans, serif, display, mono, handwriting"),
+      category: z.string().optional().describe("sans, serif, display, mono, handwriting or slab"),
       source: z.enum(["all", "google", "fontshare"]).default("all"),
       limit: z.number().int().min(1).max(50).default(10),
     },

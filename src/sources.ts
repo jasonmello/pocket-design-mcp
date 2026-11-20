@@ -39,7 +39,10 @@ export async function getIcon(name: string, opts: { size?: number; color?: strin
   const qs = new URLSearchParams();
   if (opts.size) qs.set("height", String(opts.size));
   if (opts.color) qs.set("color", opts.color);
-  const svg = await getText(`https://api.iconify.design/${m[1]}/${m[2]}.svg?${qs}`);
+  const svg = await getText(`https://api.iconify.design/${m[1]}/${m[2]}.svg?${qs}`).catch((e: Error) => {
+    if (e.message.startsWith("HTTP 404")) throw new Error(`Icon not found: ${name}. Use search_icons to find valid names.`);
+    throw e;
+  });
   if (svg.trim() === "404" || !svg.includes("<svg")) throw new Error(`Icon not found: ${name}`);
   return svg;
 }
@@ -81,7 +84,23 @@ export interface FontHit {
   page: string;
 }
 
-const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+// One vocabulary for both sources: "Sans Serif" (Google) and "Sans" (Fontshare) are both "sans".
+const CATEGORY_ALIASES: Record<string, string> = {
+  "sans serif": "sans",
+  "sans-serif": "sans",
+  monospace: "mono",
+  handwritten: "handwriting",
+  script: "handwriting",
+};
+const canonCategory = (c: string) => {
+  const n = norm(c).trim().replace(/\s+/g, " ");
+  return CATEGORY_ALIASES[n] ?? n;
+};
+/** True if any of the font's categories (Fontshare lists several, comma-separated) matches. */
+const categoryMatches = (fontCategory: string, wanted: string) =>
+  fontCategory.split(",").some((c) => canonCategory(c) === canonCategory(wanted));
 
 export async function searchFonts(opts: {
   query?: string;
@@ -90,13 +109,13 @@ export async function searchFonts(opts: {
   limit: number;
 }): Promise<FontHit[]> {
   const q = norm(opts.query ?? "");
-  const cat = opts.category ? norm(opts.category) : "";
+  const cat = opts.category ?? "";
   const hits: FontHit[] = [];
 
   if (opts.source !== "fontshare") {
     const fams = await googleFamilies();
     const matches = fams
-      .filter((f) => (!q || norm(f.family).includes(q)) && (!cat || norm(f.category).includes(cat)))
+      .filter((f) => (!q || norm(f.family).includes(q)) && (!cat || categoryMatches(f.category, cat)))
       .sort((a, b) => a.popularity - b.popularity);
     for (const f of matches.slice(0, opts.limit)) {
       const weights = [...new Set(Object.keys(f.fonts).map((k) => parseInt(k, 10)))].sort((a, b) => a - b);
@@ -119,7 +138,7 @@ export async function searchFonts(opts: {
     const url = q ? `https://api.fontshare.com/v2/fonts?q=${encodeURIComponent(q)}` : "https://api.fontshare.com/v2/fonts";
     const data = await getJson<{ fonts: FontshareFont[] }>(url);
     const matches = data.fonts.filter(
-      (f) => !cat || norm(f.category).includes(cat) || f.font_tags.some((t) => norm(t.name).includes(cat)),
+      (f) => !cat || categoryMatches(f.category, cat) || f.font_tags.some((t) => canonCategory(t.name) === canonCategory(cat)),
     );
     for (const f of matches.slice(0, opts.limit)) {
       // Variable styles come with weight 0; they only set `variable`.
@@ -271,7 +290,10 @@ interface RegistryItem {
 export async function getComponent(name: string, registry: RegistryId) {
   if (!/^[A-Za-z0-9-]+$/.test(name)) throw new Error(`Invalid name: ${name}`);
   const reg = REGISTRIES[registry];
-  const item = await getJson<RegistryItem>(reg.item(name));
+  const item = await getJson<RegistryItem>(reg.item(name)).catch((e: Error) => {
+    if (e.message.startsWith("HTTP 404")) throw new Error(`Component not found in ${registry}: ${name}. Use search_components to find valid names.`);
+    throw e;
+  });
   return {
     registry,
     name: item.name,
