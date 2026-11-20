@@ -1,4 +1,4 @@
-// Conversão hex <-> OKLCH (Björn Ottosson) para gerar paletas localmente, sem API.
+// hex <-> OKLCH conversion (Björn Ottosson) to build palettes locally, no API.
 
 export interface Oklch {
   l: number; // 0..1
@@ -12,7 +12,7 @@ const toGamma = (v: number) => (v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2
 export function parseHex(hex: string): [number, number, number] {
   let h = hex.trim().replace(/^#/, "");
   if (h.length === 3) h = [...h].map((ch) => ch + ch).join("");
-  if (!/^[0-9a-fA-F]{6}$/.test(h)) throw new Error(`Cor inválida: "${hex}". Use hex, ex.: #3b82f6`);
+  if (!/^[0-9a-fA-F]{6}$/.test(h)) throw new Error(`Invalid color: "${hex}". Use hex, e.g. #3b82f6`);
   return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255) as [number, number, number];
 }
 
@@ -43,7 +43,7 @@ function oklchToRgb({ l, c, h }: Oklch): [number, number, number] {
 
 const inGamut = (rgb: number[]) => rgb.every((v) => v >= -1e-4 && v <= 1 + 1e-4);
 
-/** Converte para hex; se a cor sair do sRGB, reduz o croma até caber. */
+/** Converts to hex; if the color is outside sRGB, lowers chroma until it fits. */
 export function oklchToHex(color: Oklch): string {
   let c = color.c;
   let rgb = oklchToRgb({ ...color, c });
@@ -60,7 +60,7 @@ export function oklchToHex(color: Oklch): string {
   );
 }
 
-/** Razão de contraste WCAG entre duas cores hex. */
+/** WCAG contrast ratio between two hex colors. */
 export function contrast(a: string, b: string): number {
   const lum = (hex: string) => {
     const [r, g, bl] = parseHex(hex).map(toLinear);
@@ -70,7 +70,7 @@ export function contrast(a: string, b: string): number {
   return (x + 0.05) / (y + 0.05);
 }
 
-// Luminosidade OKLCH de cada degrau (próxima da escala do Tailwind v4).
+// OKLCH lightness per step (close to the Tailwind v4 scale).
 const SHADE_L: Record<string, number> = {
   "50": 0.97, "100": 0.936, "200": 0.885, "300": 0.808, "400": 0.711,
   "500": 0.637, "600": 0.555, "700": 0.479, "800": 0.409, "900": 0.355, "950": 0.262,
@@ -80,7 +80,7 @@ export function shades(base: string): Record<string, string> {
   const { c, h } = hexToOklch(base);
   const out: Record<string, string> = {};
   for (const [step, l] of Object.entries(SHADE_L)) {
-    // croma menor nas pontas, como nas escalas reais
+    // less chroma at the ends, like real scales
     const taper = 1 - Math.abs(l - 0.6) * 0.9;
     out[step] = oklchToHex({ l, c: c * Math.max(0.15, taper), h });
   }
@@ -100,4 +100,39 @@ const OFFSETS: Record<Harmony, number[]> = {
 export function harmony(base: string, kind: Harmony): string[] {
   const o = hexToOklch(base);
   return OFFSETS[kind].map((d) => oklchToHex({ ...o, h: (o.h + d + 360) % 360 }));
+}
+
+/** APCA (0.0.98G-4g). Positive Lc = dark text on light background; negative = the opposite. */
+export function apca(text: string, bg: string): number {
+  const y = (hex: string) => {
+    const [r, g, b] = parseHex(hex);
+    let v = 0.2126729 * r ** 2.4 + 0.7151522 * g ** 2.4 + 0.072175 * b ** 2.4;
+    if (v < 0.022) v += (0.022 - v) ** 1.414;
+    return v;
+  };
+  const yt = y(text);
+  const yb = y(bg);
+  if (Math.abs(yb - yt) < 0.0005) return 0;
+  let out: number;
+  if (yb > yt) {
+    const s = (yb ** 0.56 - yt ** 0.57) * 1.14;
+    out = s < 0.1 ? 0 : s - 0.027;
+  } else {
+    const s = (yb ** 0.65 - yt ** 0.62) * 1.14;
+    out = s > -0.1 ? 0 : s + 0.027;
+  }
+  return +(out * 100).toFixed(1);
+}
+
+/** Finds the closest text color (same hue) that reaches the requested WCAG ratio. */
+export function fixContrast(text: string, bg: string, target: number): string | null {
+  const o = hexToOklch(text);
+  for (let d = 0.005; d <= 1; d += 0.005) {
+    for (const l of [o.l - d, o.l + d]) {
+      if (l < 0 || l > 1) continue;
+      const hex = oklchToHex({ ...o, l });
+      if (contrast(hex, bg) >= target) return hex;
+    }
+  }
+  return null;
 }

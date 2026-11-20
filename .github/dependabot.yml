@@ -13,7 +13,7 @@ updates:
     schedule:
       interval: monthly
     groups:
-      dependencias:
+      dependencies:
         patterns: ["*"]
         update-types: [minor, patch]
     ignore:

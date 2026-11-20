@@ -1,17 +1,19 @@
-// Catálogo copiado de https://resources.cesaroeduardo.com/ em 2026-11-20.
-// `access` diz como o agente chega no recurso:
-//   tool:<nome>  → uma ferramenta deste MCP cobre
-//   mcp          → existe MCP oficial; plugue o dele
-//   link         → sem API grátis; o agente só indica o link
+// Catalog built on 2026-11-20 from https://resources.cesaroeduardo.com/
+// (with pricing) and https://designengineer.tools/ (no pricing; `pricing` is left empty).
+// `access` tells the agent how to reach the resource:
+//   tool:<name>  → a tool in this MCP covers it
+//   mcp          → there is an official MCP; install that one
+//   link         → no free API; the agent can only point to the link
 
 export type Pricing = "free" | "freemium" | "paid";
 
 export interface Resource {
   name: string;
   category: string;
-  pricing: Pricing;
+  pricing?: Pricing;
   url: string;
   access: string;
+  source: "cesaroeduardo" | "designengineer";
 }
 
 const r = (category: string, name: string, pricing: Pricing, url: string, access = "link"): Resource => ({
@@ -20,6 +22,15 @@ const r = (category: string, name: string, pricing: Pricing, url: string, access
   pricing,
   url,
   access,
+  source: "cesaroeduardo",
+});
+
+const d = (category: string, name: string, url: string, access = "link"): Resource => ({
+  name,
+  category,
+  url,
+  access,
+  source: "designengineer",
 });
 
 export const CATALOG: Resource[] = [
@@ -86,7 +97,7 @@ export const CATALOG: Resource[] = [
 
   r("Web Utility", "SVGOMG", "free", "https://jakearchibald.github.io/svgomg/", "tool:optimize_svg"),
   r("Web Utility", "OpenShaders", "free", "https://openshaders.com/"),
-  r("Web Utility", "Coolors", "freemium", "https://coolors.co/", "tool:make_palette"),
+  r("Web Utility", "Coolors", "freemium", "https://coolors.co/", "tool:make_palette, check_contrast"),
 
   r("Video & Capture", "Screen Studio", "paid", "https://screen.studio/"),
   r("Video & Capture", "OpenScreen", "freemium", "https://getopenscreen.com/"),
@@ -109,4 +120,115 @@ export const CATALOG: Resource[] = [
 
   r("Organization", "Notion", "freemium", "https://www.notion.com/", "mcp"),
   r("Organization", "Linear", "freemium", "https://linear.app/", "mcp"),
+
+  // ---- from designengineer.tools (only what is not listed above) ----
+  d("Web References", "Curated Design", "https://www.curated.design/"),
+  d("Web References", "Design Spells", "https://www.designspells.com/"),
+  d("Web References", "Game UI Database", "https://www.gameuidatabase.com/"),
+  d("Web References", "Godly", "https://godly.website/"),
+  d("Web References", "HUDS+GUIS", "https://www.hudsandguis.com/"),
+  d("Web References", "Interface In Game", "https://interfaceingame.com/"),
+  d("Web References", "Layers", "https://layers.to/explore"),
+  d("Web References", "loadmo.re", "https://loadmo.re/"),
+  d("Web References", "Minimal Gallery", "https://minimal.gallery/"),
+  d("Web References", "Minimum", "https://mnmm.xyz/"),
+  d("Web References", "Pinterest", "https://pinterest.com/"),
+  d("Web References", "Rebrand", "https://www.rebrand.gallery/"),
+  d("Web References", "Saaspo", "https://saaspo.com/"),
+  d("Web References", "Same Energy", "https://same.energy/"),
+  d("Web References", "SearchSystem", "https://searchsystem.co/"),
+  d("Web References", "SEESAW", "https://www.seesaw.website/"),
+  d("Web References", "SOOT SPIRAL", "https://spiral.soot.com/spiral"),
+  d("Web References", "Supahero", "https://www.supahero.io/"),
+  d("AI Tools", "Bolt.new", "https://bolt.new/"),
+  d("AI Tools", "Claude Code", "https://claude.com/product/claude-code"),
+  d("AI Tools", "Cline", "https://cline.bot/"),
+  d("AI Tools", "OpenAI Codex", "https://openai.com/codex/"),
+  d("AI Tools", "Skills", "https://skills.sh/"),
+  d("AI Tools", "v0 by Vercel", "https://v0.dev/"),
+  d("AI Tools", "Windsurf", "https://codeium.com/windsurf"),
+  d("AI Tools", "Zed", "https://zed.dev/agentic"),
+  d("Components", "Component Gallery", "https://component.gallery/"),
+  d("Components", "Cursify", "https://cursify.vercel.app/"),
+  d("Components", "Fancy Components", "https://www.fancycomponents.dev/", "tool:search_components, get_component"),
+  d("Components", "Framer University Resources", "https://framer.university/resources"),
+  d("Components", "Motion Primitives", "https://motion-primitives.com/", "tool:search_components, get_component"),
+  d("Components", "NumberFlow", "https://number-flow.barvian.me/"),
+  d("Components", "React Bits", "https://www.reactbits.dev/", "tool:search_components, get_component"),
+  d("Web Utility", "Color.review", "https://color.review/", "tool:check_contrast"),
+  d("Web Utility", "Easing Editor", "https://animejs.com/easing-editor", "tool:get_easing"),
+  d("Web Utility", "Easing Functions", "https://easings.net/", "tool:get_easing"),
+  d("Web Utility", "Easing Gradients", "https://larsenwork.com/easing-gradients/", "tool:easing_gradient"),
+  d("Web Utility", "OKLCH Color Picker", "https://oklch.com/", "tool:make_palette, check_contrast"),
+  d("Web Utility", "Ray.so", "https://ray.so/"),
+  d("Web Utility", "RegExr", "https://regexr.com/"),
+  d("Web Utility", "ui.camera", "https://ui.camera/"),
+  d("Desktop Utility", "Claude Cowork", "https://claude.com/product/cowork"),
+  d("Desktop Utility", "Deskflow", "https://deskflow.org/"),
+  d("Desktop Utility", "Granola", "https://www.granola.ai/"),
+  d("Desktop Utility", "LocalSend", "https://localsend.org/"),
+  d("Desktop Utility", "Raycast", "https://www.raycast.com/"),
+  d("Desktop Utility", "Warp", "https://www.warp.dev/"),
+  d("Desktop Utility", "Wispr Flow", "https://wisprflow.ai/"),
+  d("Video & Capture", "LosslessCut", "https://mifi.no/losslesscut/"),
+  d("Video & Capture", "NVIDIA ShadowPlay", "https://www.nvidia.com/en-us/software/nvidia-app/#shadowplay"),
+  d("Video & Capture", "OpenCut", "https://opencut.app/"),
+  d("Video & Capture", "Parsec", "https://parsec.app/"),
+  d("Video & Capture", "Recordly", "https://recordly.dev/"),
+  d("Video & Capture", "ShareX", "https://getsharex.com/"),
+  d("Whiteboard", "Excalidraw", "https://excalidraw.com/"),
+  d("Whiteboard", "Miro", "https://miro.com/"),
+  d("Whiteboard", "Muse", "https://museapp.com/"),
+  d("Whiteboard", "tldraw", "https://www.tldraw.com/"),
+  d("Organization", "AFFiNE", "https://affine.pro/"),
+  d("Organization", "Are.na", "https://www.are.na/"),
+  d("Organization", "Eagle", "https://en.eagle.cool/"),
+  d("Organization", "Obsidian", "https://obsidian.md/"),
+  d("Organization", "Trello", "https://trello.com/"),
+  d("Fonts", "Best Free Fonts", "https://bestfreefonts.com/"),
+  d("Fonts", "Fonts In Use", "https://fontsinuse.com/"),
+  d("Fonts", "Free Faces", "https://www.freefaces.gallery/"),
+  d("Fonts", "UNCUT", "https://uncut.wtf/"),
+  d("Visual", "Bitspace", "https://bitspace.sh/"),
+  d("Visual", "cables", "https://cables.gl/"),
+  d("Visual", "Nodes", "https://nodes.io/"),
+  d("Visual", "NodeToy", "https://nodetoy.co/"),
+  d("Visual", "ShaderToy", "https://www.shadertoy.com/"),
+  d("Visual", "TouchDesigner", "https://derivative.ca/"),
+  d("Visual", "Unicorn.studio", "https://www.unicorn.studio/"),
+  d("Design Tools", "Framer", "https://www.framer.com/"),
+  d("Design Tools", "Paper", "https://paper.design/"),
+  d("Design Tools", "Penpot", "https://penpot.app/"),
+  d("Design Tools", "Rive", "https://rive.app/"),
+  d("Design Tools", "Stitch by Google Labs", "https://stitch.withgoogle.com/"),
+  d("Motion", "Cavalry", "https://cavalry.scenegroup.co/"),
+  d("Motion", "Jitter", "https://jitter.video/"),
+  d("Motion", "Lottie Creator", "https://lottiefiles.com/lottie-creator"),
+  d("Motion", "Lottielab", "https://www.lottielab.com/"),
+  d("Motion", "Theatre.js", "https://www.theatrejs.com/"),
+  d("Audio", "FMOD", "https://www.fmod.com/"),
+  d("Audio", "Splice", "https://splice.com/features/sounds"),
+  d("Volumetric", "Depthkit", "https://www.depthkit.tv/"),
+  d("Volumetric", "KIRI Engine", "https://www.kiriengine.app/"),
+  d("Volumetric", "Luma AI", "https://lumalabs.ai/interactive-scenes"),
+  d("Volumetric", "Polycam", "https://poly.cam/"),
+  d("Volumetric", "RealityScan", "https://www.unrealengine.com/en-US/realityscan"),
+  d("Volumetric", "SuperSplat Editor", "https://superspl.at/editor"),
+  d("3D Tools", "Bezi", "https://www.bezi.com/"),
+  d("3D Tools", "Houdini", "https://www.sidefx.com/"),
+  d("3D Tools", "Womp", "https://womp.com/"),
+  d("glTF", "gltfjsx", "https://github.com/pmndrs/gltfjsx"),
+  d("glTF", "gltfpack", "https://github.com/zeux/meshoptimizer/blob/master/gltf/README.md"),
+  d("glTF", "Needle Viewer", "https://viewer.needle.tools/"),
+  d("Digital Fashion", "CLO", "https://www.clo3d.com/"),
+  d("Digital Fashion", "Marvelous Designer", "https://www.marvelousdesigner.com/"),
+  d("Digital Fashion", "Style3D", "https://www.linctex.com/"),
+  d("Research", "ChatGPT", "https://chatgpt.com/"),
+  d("Research", "Google Gemini", "https://gemini.google.com/"),
+  d("Research", "NotebookLM", "https://notebooklm.google/"),
+  d("Browser", "Arc", "https://arc.net/"),
+  d("Browser", "Brave", "https://brave.com/"),
+  d("Browser", "Firefox", "https://www.mozilla.org/firefox/new/"),
+  d("Browser", "Zen", "https://zen-browser.app/"),
+  d("Emoji", "MakeEmoji", "https://makeemoji.com/"),
 ];

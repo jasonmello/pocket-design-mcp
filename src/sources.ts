@@ -1,13 +1,13 @@
 import { optimize } from "svgo";
 import { cached, getJson, getText } from "./http.js";
 
-// ---------- Ícones (Iconify, sem chave) ----------
+// ---------- Icons (Iconify, no key) ----------
 
 export const ICON_SETS = { phosphor: "ph", hugeicons: "hugeicons", feather: "feather", pixelarticons: "pixelarticons" } as const;
 export type IconSet = keyof typeof ICON_SETS;
 
-// O Feather (Cole Bemis) existe no Iconify mas fica fora do índice de busca;
-// por isso buscamos na lista completa do set (286 ícones) e filtramos aqui.
+// Feather (Cole Bemis) is on Iconify but missing from its search index,
+// so we fetch the full set list (286 icons) and filter it here.
 const featherNames = () =>
   cached("feather-list", async () => {
     const data = await getJson<{ uncategorized?: string[]; categories?: Record<string, string[]> }>(
@@ -26,7 +26,7 @@ export async function searchIcons(query: string, sets: IconSet[], limit: number)
     icons.push(...(await featherNames()).filter((n) => n.includes(q)).map((n) => `feather:${n}`));
   }
   if (indexed.length) {
-    // A API do Iconify aceita limit mínimo 32; cortamos depois.
+    // Iconify's minimum limit is 32; we trim afterwards.
     const url = `https://api.iconify.design/search?query=${encodeURIComponent(query)}&prefixes=${indexed.join(",")}&limit=${Math.max(32, limit)}`;
     icons.push(...(await getJson<{ icons: string[] }>(url)).icons);
   }
@@ -35,16 +35,19 @@ export async function searchIcons(query: string, sets: IconSet[], limit: number)
 
 export async function getIcon(name: string, opts: { size?: number; color?: string }) {
   const m = /^([a-z0-9-]+):([a-z0-9-]+)$/.exec(name.trim());
-  if (!m) throw new Error(`Nome inválido "${name}". Use prefixo:nome, ex.: ph:house`);
+  if (!m) throw new Error(`Invalid name "${name}". Use prefix:name, e.g. ph:house`);
   const qs = new URLSearchParams();
   if (opts.size) qs.set("height", String(opts.size));
   if (opts.color) qs.set("color", opts.color);
-  const svg = await getText(`https://api.iconify.design/${m[1]}/${m[2]}.svg?${qs}`);
-  if (svg.trim() === "404" || !svg.includes("<svg")) throw new Error(`Ícone não encontrado: ${name}`);
+  const svg = await getText(`https://api.iconify.design/${m[1]}/${m[2]}.svg?${qs}`).catch((e: Error) => {
+    if (e.message.startsWith("HTTP 404")) throw new Error(`Icon not found: ${name}. Use search_icons to find valid names.`);
+    throw e;
+  });
+  if (svg.trim() === "404" || !svg.includes("<svg")) throw new Error(`Icon not found: ${name}`);
   return svg;
 }
 
-// ---------- Fontes (Google Fonts metadata pública + Fontshare API) ----------
+// ---------- Fonts (public Google Fonts metadata + Fontshare API) ----------
 
 interface GoogleFamily {
   family: string;
@@ -81,7 +84,23 @@ export interface FontHit {
   page: string;
 }
 
-const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+// One vocabulary for both sources: "Sans Serif" (Google) and "Sans" (Fontshare) are both "sans".
+const CATEGORY_ALIASES: Record<string, string> = {
+  "sans serif": "sans",
+  "sans-serif": "sans",
+  monospace: "mono",
+  handwritten: "handwriting",
+  script: "handwriting",
+};
+const canonCategory = (c: string) => {
+  const n = norm(c).trim().replace(/\s+/g, " ");
+  return CATEGORY_ALIASES[n] ?? n;
+};
+/** True if any of the font's categories (Fontshare lists several, comma-separated) matches. */
+const categoryMatches = (fontCategory: string, wanted: string) =>
+  fontCategory.split(",").some((c) => canonCategory(c) === canonCategory(wanted));
 
 export async function searchFonts(opts: {
   query?: string;
@@ -90,13 +109,13 @@ export async function searchFonts(opts: {
   limit: number;
 }): Promise<FontHit[]> {
   const q = norm(opts.query ?? "");
-  const cat = opts.category ? norm(opts.category) : "";
+  const cat = opts.category ?? "";
   const hits: FontHit[] = [];
 
   if (opts.source !== "fontshare") {
     const fams = await googleFamilies();
     const matches = fams
-      .filter((f) => (!q || norm(f.family).includes(q)) && (!cat || norm(f.category).includes(cat)))
+      .filter((f) => (!q || norm(f.family).includes(q)) && (!cat || categoryMatches(f.category, cat)))
       .sort((a, b) => a.popularity - b.popularity);
     for (const f of matches.slice(0, opts.limit)) {
       const weights = [...new Set(Object.keys(f.fonts).map((k) => parseInt(k, 10)))].sort((a, b) => a - b);
@@ -115,14 +134,14 @@ export async function searchFonts(opts: {
   }
 
   if (opts.source !== "google") {
-    // Fontshare só filtra por texto; sem texto, traz os mais populares.
+    // Fontshare only filters by text; without text it returns the most popular.
     const url = q ? `https://api.fontshare.com/v2/fonts?q=${encodeURIComponent(q)}` : "https://api.fontshare.com/v2/fonts";
     const data = await getJson<{ fonts: FontshareFont[] }>(url);
     const matches = data.fonts.filter(
-      (f) => !cat || norm(f.category).includes(cat) || f.font_tags.some((t) => norm(t.name).includes(cat)),
+      (f) => !cat || categoryMatches(f.category, cat) || f.font_tags.some((t) => canonCategory(t.name) === canonCategory(cat)),
     );
     for (const f of matches.slice(0, opts.limit)) {
-      // Estilos variáveis vêm com peso 0; ficam só no campo `variable`.
+      // Variable styles come with weight 0; they only set `variable`.
       const weights = [...new Set(f.styles.filter((s) => !s.is_variable).map((s) => s.weight.weight))].sort((a, b) => a - b);
       hits.push({
         source: "fontshare",
@@ -138,7 +157,7 @@ export async function searchFonts(opts: {
   return hits;
 }
 
-// ---------- Imagens (Pixabay, chave grátis) ----------
+// ---------- Images (Pixabay, free key) ----------
 
 interface PixabayHit {
   id: number;
@@ -161,7 +180,7 @@ export async function searchImages(opts: {
   const key = process.env.PIXABAY_API_KEY;
   if (!key) {
     throw new Error(
-      "Falta a variável PIXABAY_API_KEY. A chave é grátis: crie uma conta em https://pixabay.com/api/docs/ e passe a chave no registro do MCP.",
+      "Missing PIXABAY_API_KEY. The key is free: create an account at https://pixabay.com/api/docs/ and pass it when registering the MCP.",
     );
   }
   const qs = new URLSearchParams({
@@ -175,7 +194,7 @@ export async function searchImages(opts: {
   const data = await getJson<{ totalHits: number; hits: PixabayHit[] }>(`https://pixabay.com/api/?${qs}`);
   return {
     totalHits: data.totalHits,
-    note: "Licença Pixabay: uso grátis, sem atribuição obrigatória. Baixe e hospede a imagem você mesmo; não use as URLs da Pixabay direto em produção.",
+    note: "Pixabay license: free to use, no attribution required. Download and host the image yourself; do not hotlink Pixabay URLs in production.",
     images: data.hits.slice(0, opts.limit).map((h) => ({
       page: h.pageURL,
       tags: h.tags,
@@ -188,50 +207,105 @@ export async function searchImages(opts: {
   };
 }
 
-// ---------- Componentes (registry público do shadcn/ui) ----------
+// ---------- Components (public shadcn-format registries) ----------
+// All follow the shadcn registry schema, so the same code reads all four and
+// `npx shadcn@latest add <url>` installs into any project that uses shadcn.
 
-const SHADCN = "https://ui.shadcn.com/r";
-const SHADCN_STYLE = "new-york-v4";
+export const REGISTRIES = {
+  shadcn: {
+    label: "shadcn/ui",
+    index: "https://ui.shadcn.com/r/index.json",
+    item: (n: string) => `https://ui.shadcn.com/r/styles/new-york-v4/${n}.json`,
+    install: (n: string) => `npx shadcn@latest add ${n}`,
+  },
+  reactbits: {
+    label: "React Bits (animations, text, backgrounds)",
+    index: "https://reactbits.dev/r/registry.json",
+    item: (n: string) => `https://reactbits.dev/r/${n}.json`,
+    install: (n: string) => `npx shadcn@latest add https://reactbits.dev/r/${n}.json`,
+  },
+  "motion-primitives": {
+    label: "Motion Primitives (animated components with Motion)",
+    index: "https://motion-primitives.com/c/registry.json",
+    item: (n: string) => `https://motion-primitives.com/c/${n}.json`,
+    install: (n: string) => `npx shadcn@latest add https://motion-primitives.com/c/${n}.json`,
+  },
+  fancy: {
+    label: "Fancy Components (effects and micro-interactions)",
+    index: "https://www.fancycomponents.dev/r/registry.json",
+    item: (n: string) => `https://www.fancycomponents.dev/r/${n}.json`,
+    install: (n: string) => `npx shadcn@latest add https://www.fancycomponents.dev/r/${n}.json`,
+  },
+} as const;
+export type RegistryId = keyof typeof REGISTRIES;
 
-interface ShadcnIndexItem {
+interface RegistryIndexItem {
   name: string;
   type: string;
+  title?: string;
   description?: string;
   registryDependencies?: string[];
 }
 
-const shadcnIndex = () => cached("shadcn-index", () => getJson<ShadcnIndexItem[]>(`${SHADCN}/index.json`));
+const registryIndex = (id: RegistryId) =>
+  cached(`registry-${id}`, async () => {
+    const data = await getJson<RegistryIndexItem[] | { items: RegistryIndexItem[] }>(REGISTRIES[id].index, 30000);
+    let items = Array.isArray(data) ? data : data.items;
+    // React Bits ships 4 variants of each (JS/TS x CSS/Tailwind); we only show TS + Tailwind.
+    if (id === "reactbits") items = items.filter((i) => i.name.endsWith("-TS-TW"));
+    return items;
+  });
 
-export async function searchComponents(query: string | undefined, type: string | undefined, limit: number) {
-  const q = norm(query ?? "");
-  const items = await shadcnIndex();
-  return items
-    .filter((i) => (!q || norm(i.name).includes(q) || norm(i.description ?? "").includes(q)) && (!type || i.type === `registry:${type}`))
-    .slice(0, limit)
-    .map((i) => ({ name: i.name, type: i.type.replace("registry:", ""), description: i.description, uses: i.registryDependencies }));
+export async function searchComponents(opts: {
+  query?: string;
+  registries: RegistryId[];
+  type?: string;
+  limit: number;
+}) {
+  const q = norm(opts.query ?? "");
+  const ids = opts.registries.length ? opts.registries : (Object.keys(REGISTRIES) as RegistryId[]);
+  const results = await Promise.allSettled(ids.map(async (id) => ({ id, items: await registryIndex(id) })));
+  const hits: { registry: RegistryId; name: string; type: string; description?: string }[] = [];
+  const failed: string[] = [];
+  results.forEach((r, i) => {
+    if (r.status === "rejected") return void failed.push(ids[i]);
+    for (const it of r.value.items) {
+      const text = norm(`${it.name} ${it.title ?? ""} ${it.description ?? ""}`);
+      if ((!q || text.includes(q)) && (!opts.type || it.type === `registry:${opts.type}`)) {
+        hits.push({ registry: r.value.id, name: it.name, type: it.type.replace("registry:", ""), description: it.description });
+      }
+    }
+  });
+  return { found: hits.length, components: hits.slice(0, opts.limit), ...(failed.length ? { unavailable: failed } : {}) };
 }
 
-interface ShadcnItem {
+interface RegistryItem {
   name: string;
   description?: string;
   dependencies?: string[];
   registryDependencies?: string[];
-  files: { path: string; content: string; type: string }[];
+  files: { path: string; content?: string; type: string }[];
 }
 
-export async function getComponent(name: string) {
-  if (!/^[a-z0-9-]+$/.test(name)) throw new Error(`Nome inválido: ${name}`);
-  const item = await getJson<ShadcnItem>(`${SHADCN}/styles/${SHADCN_STYLE}/${name}.json`);
+export async function getComponent(name: string, registry: RegistryId) {
+  if (!/^[A-Za-z0-9-]+$/.test(name)) throw new Error(`Invalid name: ${name}`);
+  const reg = REGISTRIES[registry];
+  const item = await getJson<RegistryItem>(reg.item(name)).catch((e: Error) => {
+    if (e.message.startsWith("HTTP 404")) throw new Error(`Component not found in ${registry}: ${name}. Use search_components to find valid names.`);
+    throw e;
+  });
   return {
+    registry,
     name: item.name,
-    install: `npx shadcn@latest add ${item.name}`,
+    description: item.description,
+    install: reg.install(item.name),
     npmDependencies: item.dependencies ?? [],
     otherComponents: item.registryDependencies ?? [],
-    files: item.files.map((f) => ({ path: f.path, content: f.content })),
+    files: item.files.map((f) => ({ path: f.path, content: f.content ?? "" })),
   };
 }
 
-// ---------- SVG (svgo local, o mesmo motor do SVGOMG) ----------
+// ---------- SVG (local svgo, the engine behind SVGOMG) ----------
 
 export function optimizeSvg(svg: string, precision: number) {
   const out = optimize(svg, {
