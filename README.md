@@ -4,7 +4,7 @@
 
 A free MCP server that gives your coding agent (Claude Code, Cursor, etc.) direct access to icons, fonts, images, components, easings, contrast checks, SVG optimization and color palettes. You ask ("put a Phosphor house icon in the header", "find a display font like Satoshi", "make this fade feel springy") and the agent finds it and drops it into your code.
 
-> Inspired by [resources.cesaroeduardo.com](https://resources.cesaroeduardo.com/) and [designengineer.tools](https://designengineer.tools/).
+> Inspired by [Rei do Photoshop](https://resources.cesaroeduardo.com/).
 
 ## Tools
 

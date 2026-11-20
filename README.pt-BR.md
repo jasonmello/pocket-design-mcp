@@ -4,7 +4,7 @@
 
 MCP grátis que dá ao seu agente de código (Claude Code, Cursor, etc.) acesso direto a ícones, fontes, imagens, componentes, easings, checagem de contraste, otimização de SVG e paletas. Você pede ("coloca um ícone de casa do Phosphor no header", "acha uma fonte display parecida com a Satoshi", "deixa esse fade com cara de mola") e o agente busca e já aplica no código.
 
-> Inspirado em [resources.cesaroeduardo.com](https://resources.cesaroeduardo.com/) e [designengineer.tools](https://designengineer.tools/).
+> Inspirado no [Rei do Photoshop](https://resources.cesaroeduardo.com/).
 
 ## Ferramentas
 
