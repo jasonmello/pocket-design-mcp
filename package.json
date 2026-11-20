@@ -1,0 +1,34 @@
+{
+  "name": "pocket-design-mcp",
+  "version": "0.1.0",
+  "description": "MCP grátis com ícones, fontes, imagens, componentes shadcn, otimização de SVG e paletas para agentes de código.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "npm run build && node test/smoke.mjs",
+    "docs:check": "node scripts/check-docs.mjs"
+  },
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "svgo": "^4.1.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
+  },
+  "bin": {
+    "pocket-design-mcp": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
+}
