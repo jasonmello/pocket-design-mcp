@@ -5,7 +5,7 @@ export async function getText(url: string, timeoutMs = 15000): Promise<string> {
     headers: { "user-agent": UA },
     signal: AbortSignal.timeout(timeoutMs),
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status} em ${url.replace(/key=[^&]+/, "key=***")}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status} at ${url.replace(/key=[^&]+/, "key=***")}`);
   return res.text();
 }
 
@@ -13,7 +13,7 @@ export async function getJson<T>(url: string, timeoutMs?: number): Promise<T> {
   return JSON.parse(await getText(url, timeoutMs)) as T;
 }
 
-// Cache simples em memória (dura enquanto o servidor estiver rodando).
+// Simple in-memory cache (lives as long as the server runs).
 const cache = new Map<string, Promise<unknown>>();
 export function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
   if (!cache.has(key)) {

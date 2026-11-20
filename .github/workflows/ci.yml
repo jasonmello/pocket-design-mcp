@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  checagens:
+  checks:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -24,10 +24,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run docs:check
-      # Build + teste de fumaça (chama Iconify, Google Fonts, Fontshare e shadcn de verdade).
+      # Build + smoke test (calls Iconify, Google Fonts, Fontshare and the component registries for real).
       - run: npm test
 
-  segredos:
+  secrets:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
