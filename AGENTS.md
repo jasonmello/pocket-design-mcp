@@ -1,36 +1,38 @@
-# pocket-design-mcp: mapa
+# pocket-design-mcp: map
 
-Servidor MCP (stdio, TypeScript) que dá a agentes de código ícones, fontes, imagens, componentes shadcn/ui, otimização de SVG e paletas, usando só fontes grátis.
+MCP server (stdio, TypeScript) that gives coding agents icons, fonts, images, components, easings, contrast checks, SVG optimization and palettes, using free sources only.
 
-## Onde está cada coisa
-- `src/index.ts`: registro das 9 ferramentas (nomes, descrições, schemas zod)
-- `src/sources.ts`: chamadas externas (Iconify, Google Fonts, Fontshare, Pixabay, shadcn) e svgo
-- `src/color.ts`: conversão OKLCH, escala 50–950, harmonias, contraste WCAG
-- `src/catalog.ts`: catálogo copiado de resources.cesaroeduardo.com, com o campo `access`
-- `src/http.ts`: fetch com timeout e cache em memória
-- `test/smoke.mjs`: sobe o servidor e chama cada ferramenta
-- `scripts/check-docs.mjs`: falha se um doc citar caminho, script ou ferramenta que não existe
-- `.github/workflows/ci.yml`: roda `docs:check` e `npm test` em todo PR; gitleaks procura segredos
+## Where things live
+- `src/index.ts`: registers the 12 tools (names, descriptions, zod schemas)
+- `src/sources.ts`: external calls (Iconify, Google Fonts, Fontshare, Pixabay, component registries) and svgo
+- `src/motion.ts`: easings, springs and eased gradients
+- `src/color.ts`: OKLCH conversion, 50–950 scale, harmonies, WCAG and APCA contrast
+- `src/catalog.ts`: catalog from resources.cesaroeduardo.com and designengineer.tools, with the `access` field
+- `src/http.ts`: fetch with timeout and in-memory cache
+- `test/smoke.mjs`: starts the server and calls every tool
+- `scripts/check-docs.mjs`: fails if a doc mentions a path, script or tool that does not exist
+- `.github/workflows/ci.yml`: runs `docs:check` and `npm test` on every PR; gitleaks scans for secrets
 
-## Comandos
-- `npm run build`: compila para `dist/`
-- `npm test`: build + teste de fumaça (precisa de internet)
-- `npm run docs:check`: confere os docs
+## Commands
+- `npm run build`: compiles to `dist/`
+- `npm test`: build + smoke test (needs internet)
+- `npm run docs:check`: checks the docs
 
-Licença AGPL-3.0. Git e PR: skill `fluxo-github`.
+AGPL-3.0. Git and PRs: `fluxo-github` skill.
 
-## Regras que não se quebram
-- Só fontes grátis. Site sem API aberta entra no catálogo como `link`; nada de scraping.
-- Chave só por variável de ambiente (`PIXABAY_API_KEY`). Nunca no código nem no repositório.
-- Erro de ferramenta volta como texto com `isError`, nunca derruba o servidor.
+## Rules that never break
+- English first everywhere (code, tool descriptions, docs, commits, PRs); Portuguese comes after (`README.pt-BR.md`, a section in the PR).
+- Free sources only. A site without an open API goes in the catalog as `link`; no scraping.
+- Keys only through environment variables (`PIXABAY_API_KEY`). Never in code or in the repo.
+- A tool error comes back as text with `isError`; it never crashes the server.
 
-## Não verificado
-- `search_images` com chave real (o teste só cobre o aviso de chave ausente).
-- Uso no Cursor e em outros clientes além do cliente MCP do teste.
+## Not verified
+- `search_images` with a real key (the test only covers the missing-key warning).
+- Clients other than the test's MCP client (Cursor, Claude Desktop).
 
-## Antes de X, leia Y
-| Antes de... | Leia |
+## Before X, read Y
+| Before... | Read |
 |---|---|
-| mudar ou criar ferramenta | `src/index.ts` e `docs/decisoes.md` |
-| trocar uma fonte de dados | `docs/decisoes.md` |
-| atualizar o catálogo | `src/catalog.ts` (comentário do topo) |
+| changing or adding a tool | `src/index.ts` and `docs/decisions.md` |
+| swapping a data source | `docs/decisions.md` |
+| updating the catalog | `src/catalog.ts` (top comment) |

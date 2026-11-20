@@ -1,24 +1,29 @@
 # pocket-design-mcp
 
-MCP grátis que dá ao seu agente de código (Claude Code, Cursor, etc.) acesso direto a ícones, fontes, imagens, componentes shadcn/ui, otimização de SVG e geração de paletas. Você pede ("coloca um ícone de casa do Phosphor no header", "acha uma fonte display parecida com a Satoshi") e o agente busca e já aplica no código.
+**English** · [Português](README.pt-BR.md)
 
-> Inspired by [resources.cesaroeduardo.com](https://resources.cesaroeduardo.com/).
+A free MCP server that gives your coding agent (Claude Code, Cursor, etc.) direct access to icons, fonts, images, components, easings, contrast checks, SVG optimization and color palettes. You ask ("put a Phosphor house icon in the header", "find a display font like Satoshi", "make this fade feel springy") and the agent finds it and drops it into your code.
 
-## Ferramentas
+> Inspired by [resources.cesaroeduardo.com](https://resources.cesaroeduardo.com/) and [designengineer.tools](https://designengineer.tools/).
 
-| Ferramenta | O que faz | Fonte | Precisa de chave? |
+## Tools
+
+| Tool | What it does | Source | Key needed? |
 |---|---|---|---|
-| `list_resources` | Lista os ~70 recursos do catálogo e diz como chegar em cada um | local | não |
-| `search_icons` / `get_icon` | Busca e devolve SVG de Phosphor, Hugeicons, Feather e Pixelarticons | Iconify | não |
-| `search_fonts` | Busca fontes e devolve o link do CSS | Google Fonts + Fontshare | não |
-| `search_images` | Fotos, ilustrações e vetores | Pixabay | sim, grátis |
-| `search_components` / `get_component` | Código e comando de instalação | registry do shadcn/ui | não |
-| `optimize_svg` | Enxuga SVG (motor do SVGOMG) | svgo, local | não |
-| `make_palette` | Escala 50–950 em OKLCH, harmonias e contraste WCAG | local | não |
+| `list_resources` | Lists ~180 curated design resources and how to reach each one | local | no |
+| `search_icons` / `get_icon` | Searches and returns SVGs from Phosphor, Hugeicons, Feather and Pixelarticons | Iconify | no |
+| `search_fonts` | Finds fonts and returns the CSS link | Google Fonts + Fontshare | no |
+| `search_images` | Photos, illustrations and vectors | Pixabay | yes, free |
+| `search_components` / `get_component` | Code and install command | shadcn/ui, React Bits, Motion Primitives, Fancy Components | no |
+| `get_easing` | easings.net curves as CSS, Motion and GSAP; springs as CSS `linear()` | local | no |
+| `easing_gradient` | Smooth gradients without the hard edge | local | no |
+| `check_contrast` | WCAG 2 ratio + APCA Lc, with a fix suggestion | local | no |
+| `optimize_svg` | Shrinks SVGs (the engine behind SVGOMG) | svgo, local | no |
+| `make_palette` | 50–950 scale in OKLCH, harmonies and WCAG contrast | local | no |
 
-Os recursos sem API grátis (Mobbin, Awwwards, MJ Pro...) aparecem no `list_resources` só como link. Os que têm MCP oficial (Figma, ElevenLabs, Supabase, Vercel, Notion, Linear, PostHog, 21st.dev) vêm marcados com `mcp`: instale o MCP deles junto com este.
+Resources without a free API (Mobbin, Awwwards, Godly...) show up in `list_resources` as links only. Those with an official MCP (Figma, ElevenLabs, Supabase, Vercel, Notion, Linear, PostHog, 21st.dev) are marked `mcp`: install theirs alongside this one.
 
-## Instalar
+## Install
 
 ```bash
 npm install
@@ -28,43 +33,44 @@ npm install
 npm run build
 ```
 
-Registrar no Claude Code (troque o caminho pelo da sua pasta):
+Register it in Claude Code (replace the path with yours):
 
 ```bash
-claude mcp add pocket-design --scope user -- node /CAMINHO/pocket-design-mcp/dist/index.js
+claude mcp add pocket-design --scope user -- node /PATH/pocket-design-mcp/dist/index.js
 ```
 
-Com imagens da Pixabay (crie a chave grátis em https://pixabay.com/api/docs/):
+With Pixabay images (get a free key at https://pixabay.com/api/docs/):
 
 ```bash
-claude mcp add pocket-design --scope user -e PIXABAY_API_KEY=sua_chave -- node /CAMINHO/pocket-design-mcp/dist/index.js
+claude mcp add pocket-design --scope user -e PIXABAY_API_KEY=your_key -- node /PATH/pocket-design-mcp/dist/index.js
 ```
 
-Reinicie a sessão e confira com `/mcp`.
+Restart the session and check with `/mcp`.
 
-## Falar em vez de digitar (tipo Wispr Flow, de graça)
+## Talk instead of typing (Wispr Flow style, for free)
 
-O MCP não grava áudio. A voz vira texto antes de chegar no agente:
+The MCP does not record audio. Your voice becomes text before it reaches the agent:
 
-- **Ditado do macOS:** Ajustes do Sistema > Teclado > Ditado. Depois é só apertar o atalho (padrão: Fn duas vezes) em qualquer campo de texto, inclusive o do Claude.
-- **VoiceInk:** app open source que roda o Whisper local no Mac, mais parecido com o Wispr Flow.
+- **macOS Dictation:** System Settings > Keyboard > Dictation. Then press the shortcut (default: Fn twice) in any text field, including Claude's.
+- **VoiceInk:** an open-source Mac app that runs Whisper locally, closer to the Wispr Flow experience.
 
-Fluxo: você fala → o texto cai no Claude Code → o agente chama o `pocket-design` → o ícone, a fonte ou o componente entra no código.
+Flow: you speak → the text lands in Claude Code → the agent calls `pocket-design` → the icon, font or component ends up in your code.
 
-## Testar
+## Test
 
 ```bash
 npm test
 ```
 
-Sobe o servidor e chama cada ferramenta de verdade, então precisa de internet. Sem `PIXABAY_API_KEY`, o teste só confere se a busca de imagens avisa que falta a chave.
+It starts the server and calls every tool for real, so it needs internet. Without `PIXABAY_API_KEY`, it only checks that the image search warns about the missing key.
 
-## Licença
+## License
 
-Código sob [AGPL-3.0](LICENSE). Pode usar, modificar e redistribuir. Se você oferecer uma versão modificada como serviço na rede, precisa disponibilizar o código dela sob a mesma licença.
+Code under [AGPL-3.0](LICENSE). You can use, modify and redistribute it. If you offer a modified version as a network service, you must make its source available under the same license.
 
-Os recursos que o MCP busca têm licenças próprias:
+The resources this MCP fetches have their own licenses:
 
-- Ícones: MIT (Phosphor, Hugeicons, Feather e Pixelarticons, conforme o Iconify).
-- Google Fonts: licenças abertas. Fontshare: licença própria da ITF (Free Font License), grátis inclusive para uso comercial; vale ler antes de usar.
-- Pixabay: uso grátis, sem atribuição obrigatória. Baixe e hospede as imagens você mesmo.
+- Icons: MIT (Phosphor, Hugeicons, Feather and Pixelarticons, as listed on Iconify).
+- Google Fonts: open licenses. Fontshare: ITF Free Font License, free for commercial use too; read it before shipping.
+- Pixabay: free to use, no attribution required. Download and host images yourself.
+- Components: check each registry's license (shadcn/ui, React Bits, Motion Primitives and Fancy Components).
