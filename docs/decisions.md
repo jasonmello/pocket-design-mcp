@@ -4,7 +4,7 @@
 
 - **Name `pocket-design-mcp`**, picked by Jason.
 - **English first.** Code, tool descriptions, docs, commits and PRs are written in English; Portuguese comes after (`README.pt-BR.md`). Jason's call, so the repo reads well to anyone.
-- **AGPL-3.0**, picked by Jason: anyone running a modified version as a service must publish its source.
+- **Apache-2.0**, picked by Jason (replaced AGPL-3.0 the same day): permissive, so anyone can use it in commercial or closed projects, with an explicit patent grant.
 - **Icons through Iconify** instead of each set's own API: one keyless API covers Phosphor (`ph`), Hugeicons, Feather and Pixelarticons.
 - **Feather searched from its set list**: Feather (`feather`, Cole Bemis) is on Iconify, but its search returns 0 results. We download the name list (`/collection?prefix=feather`) and filter locally. Not to be confused with `fe` (Feather Icon, by another author).
 - **Google Fonts through `fonts.google.com/metadata/fonts`**, so no key is needed. It is public but undocumented; if it breaks, switch to the Web Fonts API with a free key.

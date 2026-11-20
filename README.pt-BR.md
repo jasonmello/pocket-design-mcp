@@ -66,7 +66,7 @@ Sobe o servidor e chama cada ferramenta de verdade, então precisa de internet. 
 
 ## Licença
 
-Código sob [AGPL-3.0](LICENSE). Pode usar, modificar e redistribuir. Se você oferecer uma versão modificada como serviço na rede, precisa disponibilizar o código dela sob a mesma licença.
+Código sob [Apache-2.0](LICENSE). Pode usar, modificar e redistribuir, inclusive em projetos comerciais e de código fechado, desde que mantenha os avisos de licença e de copyright e indique o que mudou. A licença também concede o uso das patentes dos contribuidores.
 
 Os recursos que o MCP busca têm licenças próprias:
 

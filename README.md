@@ -66,7 +66,7 @@ It starts the server and calls every tool for real, so it needs internet. Withou
 
 ## License
 
-Code under [AGPL-3.0](LICENSE). You can use, modify and redistribute it. If you offer a modified version as a network service, you must make its source available under the same license.
+Code under [Apache-2.0](LICENSE). You can use, modify and redistribute it, including in commercial and closed-source projects, as long as you keep the license and copyright notices and state your changes. It also grants a patent license from contributors.
 
 The resources this MCP fetches have their own licenses:
 

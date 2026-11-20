@@ -18,7 +18,7 @@ MCP server (stdio, TypeScript) that gives coding agents icons, fonts, images, co
 - `npm test`: build + smoke test (needs internet)
 - `npm run docs:check`: checks the docs
 
-AGPL-3.0. Git and PRs: `fluxo-github` skill.
+Apache-2.0. Git and PRs: `fluxo-github` skill.
 
 ## Rules that never break
 - English first everywhere (code, tool descriptions, docs, commits, PRs); Portuguese comes after (`README.pt-BR.md`, a section in the PR).
