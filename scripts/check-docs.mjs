@@ -14,12 +14,13 @@ for (const doc of docs) {
     if (!existsSync(path)) errors.push(`${doc}: missing path ${path}`);
   }
   // npm scripts, e.g. npm run build, npm test
-  for (const [, name] of text.matchAll(/npm (?:run )?([a-z:]+)/g)) {
-    if (["install", "ci", "i"].includes(name)) continue;
+  // Only commands written as code (`npm run build`), so prose like "npm package" is ignored.
+  for (const [, name] of text.matchAll(/`npm (?:run )?([a-z:]+)[^`]*`/g)) {
+    if (["install", "ci", "i", "publish", "pack", "login"].includes(name)) continue;
     if (!scripts.includes(name)) errors.push(`${doc}: missing npm script "${name}"`);
   }
   // MCP tools in backticks with a known snake_case prefix
-  for (const [, name] of text.matchAll(/`((?:list|search|get|optimize|make|check|easing)_[a-z_]+)`/g)) {
+  for (const [, name] of text.matchAll(/`((?:list|search|get|optimize|make|check|easing|type|spacing|export|svg)_[a-z_]+)`/g)) {
     if (!tools.includes(name)) errors.push(`${doc}: unknown tool ${name}`);
   }
 }

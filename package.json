@@ -1,13 +1,14 @@
 {
   "name": "pocket-design-mcp",
-  "version": "0.2.0",
-  "description": "Free MCP server with icons, fonts, images, components, easings, contrast checks, SVG optimization and palettes for coding agents.",
+  "version": "0.3.0",
+  "description": "Free MCP server with icons, fonts, images, components, design tokens, easings, contrast checks, SVG tools and patterns for coding agents.",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "npm run build && node test/smoke.mjs",
-    "docs:check": "node scripts/check-docs.mjs"
+    "docs:check": "node scripts/check-docs.mjs",
+    "prepublishOnly": "npm run build"
   },
   "license": "Apache-2.0",
   "type": "module",
@@ -33,12 +34,25 @@
   ],
   "keywords": [
     "mcp",
+    "mcp-server",
+    "model-context-protocol",
     "design",
+    "design-tokens",
     "icons",
     "fonts",
     "shadcn",
+    "tailwind",
     "easing",
     "contrast",
-    "claude"
-  ]
+    "claude",
+    "cursor"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jasonmello/pocket-design-mcp.git"
+  },
+  "homepage": "https://github.com/jasonmello/pocket-design-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/jasonmello/pocket-design-mcp/issues"
+  }
 }

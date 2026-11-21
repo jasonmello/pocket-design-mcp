@@ -77,13 +77,16 @@ const SHADE_L: Record<string, number> = {
 };
 
 export function shades(base: string): Record<string, string> {
-  const { c, h } = hexToOklch(base);
+  const { l: baseL, c, h } = hexToOklch(base);
   const out: Record<string, string> = {};
   for (const [step, l] of Object.entries(SHADE_L)) {
     // less chroma at the ends, like real scales
     const taper = 1 - Math.abs(l - 0.6) * 0.9;
     out[step] = oklchToHex({ l, c: c * Math.max(0.15, taper), h });
   }
+  // The brand color itself replaces the step with the closest lightness, so it is always in the scale.
+  const closest = Object.entries(SHADE_L).sort((x, y) => Math.abs(x[1] - baseL) - Math.abs(y[1] - baseL))[0][0];
+  out[closest] = "#" + base.trim().replace(/^#/, "").toLowerCase().replace(/^(.)(.)(.)$/, "$1$1$2$2$3$3");
   return out;
 }
 
