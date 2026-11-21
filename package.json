@@ -1,6 +1,6 @@
 {
   "name": "pocket-design-mcp",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Free MCP server with icons, fonts, images, components, design tokens, easings, contrast checks, SVG tools and patterns for coding agents.",
   "main": "dist/index.js",
   "scripts": {

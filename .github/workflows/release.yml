@@ -1,0 +1,87 @@
+# Publishes to npm and creates the GitHub Release whenever main has a version that is not released yet.
+# To release: bump "version" in package.json in a PR and merge it. Nothing else.
+# npm auth uses trusted publishing (OIDC): no token is stored anywhere, and provenance is added automatically.
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: [package.json]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # create the tag and the GitHub Release
+  id-token: write # npm trusted publishing
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          registry-url: https://registry.npmjs.org
+          # No dependency cache in the release job, so a poisoned cache cannot reach a published package.
+          package-manager-cache: false
+
+      - name: Read version
+        id: version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          name=$(node -p "require('./package.json').name")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null; then
+            echo "tagged=true" >> "$GITHUB_OUTPUT"
+            echo "v$version is already released; nothing to do."
+          else
+            echo "tagged=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check npm version
+        if: steps.version.outputs.tagged == 'false'
+        # Trusted publishing needs npm 11.5.1 or later.
+        run: |
+          npm -v
+          node -e "const [a,b,c]=process.argv[1].split('.').map(Number); process.exit(a>11||(a===11&&(b>5||(b===5&&c>=1)))?0:1)" "$(npm -v)" \
+            || { echo "::error::npm $(npm -v) is too old for trusted publishing (needs 11.5.1+)"; exit 1; }
+
+      - run: npm ci
+        if: steps.version.outputs.tagged == 'false'
+
+      - run: npm run docs:check
+        if: steps.version.outputs.tagged == 'false'
+
+      - run: npm test
+        if: steps.version.outputs.tagged == 'false'
+
+      - name: Publish to npm
+        if: steps.version.outputs.tagged == 'false'
+        env:
+          NAME: ${{ steps.version.outputs.name }}
+          VERSION: ${{ steps.version.outputs.version }}
+        # Skips the publish when this version is already on npm, so a rerun after a failed release step is safe.
+        run: |
+          if npm view "$NAME@$VERSION" version > /dev/null 2>&1; then
+            echo "$VERSION is already on npm; skipping publish."
+          else
+            npm publish --access public
+          fi
+
+      - name: Create GitHub Release
+        if: steps.version.outputs.tagged == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v$VERSION" \
+            --target "$GITHUB_SHA" \
+            --title "v$VERSION" \
+            --generate-notes \
+            --latest
