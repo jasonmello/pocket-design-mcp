@@ -5,10 +5,11 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 const client = new Client({ name: "smoke", version: "0" });
 await client.connect(new StdioClientTransport({ command: "node", args: ["dist/index.js"], env: { ...process.env } }));
 
+let failed = 0;
 const { tools } = await client.listTools();
 console.log("tools:", tools.map((t) => t.name).join(", "));
+if (tools.length !== 20) { console.log(`FAIL expected 20 tools, got ${tools.length}`); failed++; }
 
-let failed = 0;
 async function check(name, args, ok) {
   const res = await client.callTool({ name, arguments: args });
   const body = res.content[0].text;
@@ -48,13 +49,51 @@ const bad = await client.callTool({ name: "get_icon", arguments: { name: "nao-ex
 console.log(bad.isError ? "OK   error handled:" : "FAIL error not flagged:", bad.content[0].text);
 if (!bad.isError) failed++;
 
+// Images: no key needed (Wikimedia Commons); Pixabay only when a key is set.
+await check("search_images", { query: "mountain lake", limit: 2 }, (b) => { const r = JSON.parse(b); return r.images.length > 0 && r.images[0].license; });
 if (process.env.PIXABAY_API_KEY) {
-  await check("search_images", { query: "mountain", limit: 2 }, (b) => JSON.parse(b).images.length === 2);
+  await check("search_images", { query: "mountain", source: "pixabay", limit: 2 }, (b) => JSON.parse(b).images.length === 2);
 } else {
-  const r = await client.callTool({ name: "search_images", arguments: { query: "mountain" } });
-  console.log(r.isError ? "OK   search_images warns without key:" : "FAIL", r.content[0].text.slice(0, 90));
+  const r = await client.callTool({ name: "search_images", arguments: { query: "mountain", source: "pixabay" } });
+  console.log(r.isError ? "OK   pixabay warns without key:" : "FAIL", r.content[0].text.slice(0, 90));
   if (!r.isError) failed++;
 }
+
+// Icons beyond the default sets
+await check("list_icon_sets", { query: "lucide" }, (b) => JSON.parse(b).sets[0].prefix === "lucide");
+await check("search_icons", { query: "github", sets: ["brands"] }, (b) => JSON.parse(b).icons.includes("simple-icons:github"));
+await check("search_icons", { query: "rocket", sets: ["emoji"] }, (b) => JSON.parse(b).icons.some((i) => i.startsWith("fluent-emoji-flat:")));
+await check("search_icons", { query: "house", limit: 8 }, (b) => new Set(JSON.parse(b).icons.map((i) => i.split(":")[0])).size >= 3);
+await check("get_icon", { name: "flag:br-4x3" }, (b) => b.startsWith("<svg"));
+
+// Fonts: self-hosting info from Fontsource
+await check("search_fonts", { query: "inter", source: "google", limit: 1 }, (b) => JSON.parse(b)[0].selfHost.install === "npm i @fontsource-variable/inter");
+await check("search_fonts", { source: "fontsource", category: "display", limit: 2 }, (b) => JSON.parse(b).every((f) => f.source === "fontsource" && f.selfHost));
+
+// Tokens
+await check("type_scale", {}, (b) => { const s = JSON.parse(b).steps; return s.length === 8 && s.find((x) => x.name === "base").clamp.startsWith("clamp(1rem"); });
+await check("spacing_scale", {}, (b) => JSON.parse(b).find((x) => x.name === "4").px === 16);
+await check("make_shadows", { levels: 3 }, (b) => JSON.parse(b).shadows.length === 3);
+await check("export_tokens", { colors: { primary: "#4f46e5" }, format: "tailwind" }, (b) => b.includes("@theme {") && b.includes("--color-primary-700: #4f46e5;") && b.includes("--spacing: 0.25rem;"));
+await check("export_tokens", { colors: { primary: "#4f46e5" }, format: "dtcg" }, (b) => JSON.parse(b).color.primary["500"].$type === "color");
+await check("make_palette", { base: "#4f46e5" }, (b) => Object.values(JSON.parse(b).scale).some((s) => s.hex === "#4f46e5"));
+
+// SVG and backgrounds
+await check("svg_to_react", { svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M2 2h20"/></svg>', name: "LineIcon" }, (b) => { const c = JSON.parse(b).code; return c.includes("strokeWidth") && c.includes("{...props}") && c.includes("SVGProps"); });
+await check("make_pattern", { type: "grid" }, (b) => JSON.parse(b).css.startsWith('background-image: url("data:image/svg+xml,'));
+await check("make_blob", { seed: 3 }, (b) => JSON.parse(b).path.endsWith("Z"));
+const unsafe = await client.callTool({ name: "make_pattern", arguments: { type: "dots", color: '"/><script>' } });
+console.log(unsafe.isError ? "OK   unsafe pattern color rejected" : "FAIL unsafe color accepted");
+if (!unsafe.isError) failed++;
+
+// Prompts and resource
+const prompts = (await client.listPrompts()).prompts.map((p) => p.name);
+const promptOk = ["design_review", "build_section", "brand_kit", "unify_icons"].every((n) => prompts.includes(n));
+const kit = await client.getPrompt({ name: "brand_kit", arguments: { color: "#0ea5e9" } });
+const catalog = JSON.parse((await client.readResource({ uri: "pocket-design://catalog" })).contents[0].text);
+const extrasOk = promptOk && kit.messages[0].content.text.includes("#0ea5e9") && catalog.length > 100;
+console.log(extrasOk ? "OK   prompts and catalog resource" : "FAIL prompts or resource");
+if (!extrasOk) failed++;
 
 await client.close();
 console.log(failed ? `\n${failed} failure(s)` : "\nall ok");

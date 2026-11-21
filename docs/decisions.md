@@ -18,3 +18,16 @@
 - **No scraping** of Mobbin, Awwwards, 60fps, Godly and similar: it would break their terms and be fragile to maintain. They are listed as `link`.
 - **Voice stays outside the MCP**: an MCP cannot capture audio. macOS Dictation or VoiceInk (local Whisper) turns speech into text.
 - **CI calls the real APIs** in the smoke test. If an external API goes down, CI turns red without any code change; rerun it before digging in.
+
+## 2026-11-21
+
+- **GitHub Actions major versions are accepted when CI passes.** The general rule closes major bumps, but for Actions they mostly change the runtime (e.g. Node 24) and staying behind ends in deprecation warnings. Jason approved merging checkout v7, setup-node v7 and gitleaks v3.
+- **All Iconify sets are open** (~280), with aliases (`brands` = simple-icons, `emoji` = fluent-emoji-flat, `flags` = flag...). Default search covers popular UI sets and interleaves results by set so several styles show up. Sets hidden from Iconify's search index (Feather, Fluent Emoji...) are searched from their name list.
+- **Images work with no key.** `auto` uses Wikimedia Commons first (fast, free licenses only) and Openverse as fallback. Openverse was tested on 2026-11-21: 5–33 s per request and some 500/504 errors, and its server-side filters made it slower, so we fetch 20 results with only the query and filter license, type and orientation locally. Pixabay is used when `PIXABAY_API_KEY` is set.
+- **Fontsource enriches font results**: Google fonts get a `selfHost` block (npm package + import), and Fontsource's non-Google fonts show up as their own results. If Fontsource is down, the other sources still answer.
+- **The brand color stays in its own scale**: `make_palette` and `export_tokens` replace the step with the closest lightness by the exact input color.
+- **Type scale follows the Utopia approach** (fluid `clamp()` between two viewports, two ratios). Tailwind v4 export uses its own variable names (`--text-*`, `--text-*--line-height`, a single `--spacing`).
+- **Shadows are layered** (each elevation stacks layers whose offset and blur double), following the common "realistic shadows" technique.
+- **svg_to_react rejects scripts and event handlers** instead of trying to sanitize them, and spreads props on the root `<svg>`.
+- **Prompts and a catalog resource** were added so clients with prompt menus can run whole workflows (review, build a section, brand kit, unify icons).
+- **npm package** `pocket-design-mcp` (name was free on 2026-11-21) so installing is one `npx` line. Publishing needs Jason's npm login.
