@@ -80,6 +80,8 @@ npm test
 
 O teste sobe o servidor e chama cada ferramenta de verdade, então precisa de internet.
 
+As versões saem sozinhas: suba o `version` do `package.json` num pull request, e o merge publica no npm (com proveniência) e cria a Release no GitHub.
+
 ## Licença
 
 Código sob [Apache-2.0](LICENSE). Pode usar, modificar e redistribuir, inclusive em projetos comerciais e de código fechado, desde que mantenha os avisos de licença e de copyright e indique o que mudou. A licença também concede o uso das patentes dos contribuidores.

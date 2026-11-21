@@ -16,12 +16,13 @@ MCP server (stdio, TypeScript) that gives coding agents icons, fonts, images, co
 - `test/smoke.mjs`: starts the server and calls every tool, prompt and resource
 - `scripts/check-docs.mjs`: fails if a doc mentions a path, script or tool that does not exist
 - `.github/workflows/ci.yml`: runs `docs:check` and `npm test` on every PR; gitleaks scans for secrets
+- `.github/workflows/release.yml`: on main, if the `package.json` version has no tag yet, tests, publishes to npm (trusted publishing, no token) and creates the tag and GitHub Release
 
 ## Commands
 - `npm run build`: compiles to `dist/`
 - `npm test`: build + smoke test (needs internet)
 - `npm run docs:check`: checks the docs
-- `npm publish`: builds (`prepublishOnly`) and publishes; only with Jason's ok and his npm login
+- Release: bump `version` in `package.json` inside a PR; merging it releases automatically. Never run `npm publish` by hand.
 
 Apache-2.0. Git and PRs: `fluxo-github` skill.
 
