@@ -80,6 +80,8 @@ npm test
 
 The test starts the server and calls every tool for real, so it needs internet.
 
+Releases are automatic: bump `version` in `package.json` in a pull request, and merging it publishes to npm (with provenance) and creates the GitHub Release.
+
 ## License
 
 Code under [Apache-2.0](LICENSE). You can use, modify and redistribute it, including in commercial and closed-source projects, as long as you keep the license and copyright notices and state your changes. It also grants a patent license from contributors.

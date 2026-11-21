@@ -31,3 +31,6 @@
 - **svg_to_react rejects scripts and event handlers** instead of trying to sanitize them, and spreads props on the root `<svg>`.
 - **Prompts and a catalog resource** were added so clients with prompt menus can run whole workflows (review, build a section, brand kit, unify icons).
 - **npm package** `pocket-design-mcp` (name was free on 2026-11-21) so installing is one `npx` line. Publishing needs Jason's npm login.
+- **Releases are automated** (`.github/workflows/release.yml`). Merging a PR that bumps `version` makes CI test, publish to npm and create the tag plus a GitHub Release with notes generated from PR titles. npm auth uses **trusted publishing** (OIDC, needs npm 11.5.1+): no npm token exists to leak, no 2FA prompt per release, and provenance is attached automatically. The publish step skips versions already on npm, so rerunning a half-failed release is safe. The release job does not use the dependency cache. Jason configured the trusted publisher on npmjs.com once.
+- **The server version is read from `package.json`** instead of being typed in `src/index.ts`, so it can never drift from the published version.
+- **v0.3.0 was published by hand** (before the workflow existed); its tag and Release were created manually on the published commit.
